@@ -1,0 +1,8 @@
+{% extends 'core/base_edit.html' %}
+
+{% block back_button %}
+    <a href="{% url 'perm_division_detail' form.division.value %}" class="btn btn-default btn-block">
+        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+        Назад
+    </a>
+{% endblock %}

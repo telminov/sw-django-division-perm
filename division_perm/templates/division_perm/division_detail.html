@@ -1,0 +1,92 @@
+{% extends 'core/base_detail.html' %}
+{% load perm %}
+
+{% block detail %}
+    <p>Название: {{ object.name }}</p>
+    <div>Сотрудники:
+        <ol>
+            {% for employee in object.employees.all %}
+            <li>{{ employee }}</li>
+            {% endfor %}
+        </ol>
+    </div>
+    <div>Входит в группы:
+        <ol>
+            {% for group in object.groups.all %}
+            <li>{{ group }}</li>
+            {% endfor %}
+        </ol>
+    </div>
+{% endblock %}
+
+
+{% block edit_button %}
+    {% block_super_if_can_func 'sys_edit' object %}
+{% endblock %}
+
+{% block delete_button %}
+    {% block_super_if_can_func 'sys_edit' object %}
+{% endblock %}
+
+
+{% block content %}
+    {% can_func 'sys_edit' object as can_edit %}
+
+    <fieldset>
+        <legend>Основная информация</legend>
+        {{ block.super }}
+    </fieldset>
+
+    <fieldset style="margin-top: 50px">
+        <legend>Роли</legend>
+
+        {% if can_edit %}
+        <a class="btn btn-success btn-sm" href="role/create/">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Добавить роль
+        </a>
+        {% endif %}
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Код</th>
+                    <th>Название</th>
+                    <th>Уровень</th>
+                    <th>Сотрудников</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for role in object.roles.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            {% if can_edit %}
+                                <a href="role/{{ role.id }}/edit/">{{ role.code }}</a>
+                            {% else %}
+                                <a href="role/{{ role.id }}/">{{ role.code }}</a>
+                            {% endif %}
+                        </td>
+                        <td>{{ role.name }}</td>
+                        <td>{{ role.level }}</td>
+                        <td>{{ role.employees.count }}</td>
+                        <td>
+                            {% if can_edit %}
+                                <a href="role/{{ role.id }}/delete/" class="btn btn-danger btn-xs">
+                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center"><strong>Нет ролей</strong></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </fieldset>
+{% endblock %}

@@ -1,0 +1,22 @@
+[
+{
+  "model": "division_perm.func",
+  "pk": 1,
+  "fields": {
+    "code": "sys_edit",
+    "name": "Редактирование системной информации",
+    "description": "",
+    "level": 9
+  }
+},
+{
+  "model": "division_perm.func",
+  "pk": 2,
+  "fields": {
+    "code": "sys_read",
+    "name": "Просмотр системной информации",
+    "description": "",
+    "level": 0
+  }
+}
+]

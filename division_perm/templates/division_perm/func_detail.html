@@ -1,0 +1,12 @@
+{% extends 'core/base_detail.html' %}
+
+{% block detail %}
+    <p>Код: {{ object.code }}</p>
+    <p>Название: {{ object.name }}</p>
+    <p>Описание: {{ object.description }}</p>
+    <p>Уровень: {{ object.level }}</p>
+    <p>Изменяет: {{ object.is_modify|yesno }}</p>
+{% endblock %}
+
+{% block edit_button %}{% endblock %}
+{% block delete_button %}{% endblock %}

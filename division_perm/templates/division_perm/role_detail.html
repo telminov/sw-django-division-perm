@@ -1,0 +1,26 @@
+{% extends 'core/base_detail.html' %}
+{% load perm %}
+
+{% block detail %}
+    <p>Код: {{ object.code }}</p>
+    <p>Название: {{ object.name }}</p>
+    <p>Описание: {{ object.description }}</p>
+    <p>Уровень: {{ object.level }}</p>
+{% endblock %}
+
+
+{% block edit_button %}
+    {% block_super_if_can_func 'sys_edit' %}
+{% endblock %}
+
+{% block delete_button %}
+    {% block_super_if_can_func 'sys_edit' %}
+{% endblock %}
+
+
+{% block back_button %}
+    <a href="{% url 'perm_division_detail' object.division.id %}" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+        К списку
+    </a>
+{% endblock %}
