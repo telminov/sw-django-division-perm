@@ -36,7 +36,7 @@ class Update(TitleMixin, FormAccessMixin, ModifyAccessMixin, LoginRequiredMixin,
     form_class = forms.Division
 
     def get_title(self):
-        return 'Редактирование подразделение "%s"' % self.get_object().name
+        return 'Редактирование подразделения "%s"' % self.get_object().name
 
 
 class Delete(TitleMixin, ModifyAccessMixin, LoginRequiredMixin, generic.DeleteView):
