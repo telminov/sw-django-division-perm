@@ -28,7 +28,11 @@ class FuncAccessMixin(UserPassesTestMixin):
             return False
 
         # FIXME: не уверен что правильно - не учитываются подразделения ролей
-        user_level = max(r.level for r in self.request.user.employee.roles.all())
+        levels = [r.level for r in self.request.user.employee.roles.all()]
+        if not levels:
+            return False
+
+        user_level = max(levels)
         func_level = models.Func.objects.get(code=self.func_code).level
 
         return func_level <= user_level
