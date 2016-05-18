@@ -1,26 +1,18 @@
 # coding: utf-8
 # python setup.py sdist register upload
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='sw-django-perm-division',
-    version='0.0.1',
+    version='0.0.3',
     description='Soft Way company permission system based on employee division affiliations.',
     author='Telminov Sergey',
+    author_email='sergey@telminov.ru',
     url='https://github.com/telminov/sw-django-division-perm',
-    packages=[
-        'division_perm',
-        'division_perm/fixtures',
-        'division_perm/management',
-        'division_perm/management/commands',
-        'division_perm/migrations',
-        'division_perm/templates',
-        'division_perm/templates/division_perm',
-        'division_perm/templatetags',
-        'division_perm/views',
-    ],
+    include_package_data=True,
+    packages=find_packages(),
     license='The MIT License',
-    install_requires=[
+    requires=[
         'django',
     ],
 )
