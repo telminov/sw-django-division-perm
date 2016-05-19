@@ -1,6 +1,6 @@
 {% extends 'core/base_list.html' %}
 {% load perm %}
-
+{% load djutils %}
 
 {% block add_button %}
     {% block_super_if_can_func 'sys_edit' %}
@@ -11,7 +11,7 @@
     <thead>
         <tr>
             <th>#</th>
-            <th>Имя</th>
+            {% sort_th 'name' 'Название' %}
         </tr>
     </thead>
 

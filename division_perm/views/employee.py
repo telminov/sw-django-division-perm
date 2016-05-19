@@ -3,7 +3,7 @@ from django.contrib.auth.forms import AdminPasswordChangeForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.views import generic
-from djutils.views.generic import TitleMixin
+from djutils.views.generic import TitleMixin, SortMixin
 from .. import models
 from .. import consts
 from .. import forms
@@ -11,10 +11,11 @@ from ..generic import CreateMainEntityMixin, ListAccessMixin, ReadAccessMixin, M
     FuncAccessMixin
 
 
-class List(TitleMixin, FuncAccessMixin, ListAccessMixin, LoginRequiredMixin, generic.ListView):
+class List(SortMixin, TitleMixin, FuncAccessMixin, ListAccessMixin, LoginRequiredMixin, generic.ListView):
     func_code = consts.SYS_READ_FUNC
     title = 'Сотрудники'
     model = models.Employee
+    sort_params = ('last_name', )
 
 
 class Detail(TitleMixin, ReadAccessMixin, LoginRequiredMixin, generic.DetailView):

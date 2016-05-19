@@ -2,25 +2,39 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse_lazy
 from django.views import generic
-from djutils.views.generic import TitleMixin
+from djutils.views.generic import TitleMixin, SortMixin
+from djutils.views.helpers import prepare_sort_params
 from ..generic import ListAccessMixin, FuncAccessMixin, ReadAccessMixin, ModifyAccessMixin, FormAccessMixin
 from .. import models
 from .. import forms
 from .. import consts
 
 
-class List(TitleMixin, FuncAccessMixin, ListAccessMixin, LoginRequiredMixin, generic.ListView):
+class List(SortMixin, TitleMixin, FuncAccessMixin, ListAccessMixin, LoginRequiredMixin, generic.ListView):
     func_code = consts.SYS_READ_FUNC
     title = 'Подразделения'
     model = models.Division
+    sort_params = ('name', )
 
 
-class Detail(ReadAccessMixin, TitleMixin, LoginRequiredMixin, generic.DetailView):
+class Detail(SortMixin, ReadAccessMixin, TitleMixin, LoginRequiredMixin, generic.DetailView):
     func_code = consts.SYS_READ_FUNC
     model = models.Division
+    sort_params = ('code', 'name', 'level')
+    sort_param_name = 'role_sort'
+    sort_qs = False
+
+    def get_default_sort_param(self):
+        return '-level'
 
     def get_title(self):
         return 'Подразделение "%s"' % self.get_object().name
+
+    def get_context_data(self, **kwargs):
+        c = super().get_context_data(**kwargs)
+        c['sort_params'] = prepare_sort_params(self.sort_params, request=self.request, sort_key=self.sort_param_name)
+        c['roles'] = self.get_object().roles.order_by(self.request.GET[self.sort_param_name])
+        return c
 
 
 class Create(TitleMixin, FormAccessMixin, LoginRequiredMixin, generic.CreateView):

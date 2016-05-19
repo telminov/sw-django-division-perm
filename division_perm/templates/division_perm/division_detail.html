@@ -1,5 +1,7 @@
 {% extends 'core/base_detail.html' %}
 {% load perm %}
+{% load djutils %}
+
 
 {% block detail %}
     <p>Название: {{ object.name }}</p>
@@ -51,16 +53,16 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Код</th>
-                    <th>Название</th>
-                    <th>Уровень</th>
+                    {% sort_th 'code' 'Код' %}
+                    {% sort_th 'name' 'Название' %}
+                    {% sort_th 'level' 'Уровень' %}
                     <th>Сотрудников</th>
                     <th></th>
                 </tr>
             </thead>
 
             <tbody>
-                {% for role in object.roles.all %}
+                {% for role in roles %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td>

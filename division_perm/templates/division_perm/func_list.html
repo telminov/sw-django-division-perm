@@ -1,4 +1,5 @@
 {% extends 'core/base_list.html' %}
+{% load djutils %}
 
 {% block add_button %}{% endblock %}
 
@@ -6,9 +7,9 @@
     <thead>
         <tr>
             <th>#</th>
-            <th>Код</th>
-            <th>Имя</th>
-            <th>Уровень</th>
+            {% sort_th 'code' 'Код' %}
+            {% sort_th 'name' 'Название' %}
+            {% sort_th 'level' 'Уровень' %}
         </tr>
     </thead>
 
