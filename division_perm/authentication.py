@@ -44,7 +44,7 @@ class SigAuthentication(BaseAuthentication):
                   ' md5(ext_id + func + body + secret_key)'
             raise exceptions.AuthenticationFailed(msg)
 
-        func = list(filter(bool, request.path.split('/')))[-1]
+        func = [i for i in request.path.split('/') if i and not i.isdigit()][-1]
         body = request.body.decode()
 
         return self._check(ext_user,  func, body, request_sig)
