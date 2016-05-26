@@ -1,8 +1,10 @@
 # coding: utf-8
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Q
+from swutils.encrypt import decrypt, encrypt
 
 
 class AccessMixin:
@@ -42,6 +44,18 @@ class AccessMixin:
         read_access = Division.objects.filter(id__in=division_ids)
         return read_access
 
+    def can_employee_modify(self, employee: 'Employee'):
+        full_access = set(self.get_full_access())
+        employee_divisions = set(Division.objects.filter(employees=employee))
+        have_access = bool(employee_divisions & full_access)
+        return have_access
+
+    def can_employee_read(self, employee: 'Employee'):
+        read_access = set(self.get_read_access())
+        employee_divisions = set(Division.objects.filter(employees=employee))
+        have_access = bool(employee_divisions & read_access)
+        return have_access
+
 
 class Employee(AccessMixin, models.Model):
     user = models.OneToOneField(User, related_name='employee')
@@ -49,6 +63,9 @@ class Employee(AccessMixin, models.Model):
     first_name = models.CharField(max_length=255, verbose_name='Имя', blank=True)
     middle_name = models.CharField(max_length=255, verbose_name='Отчество', blank=True)
     roles = models.ManyToManyField('Role', verbose_name='Роли', related_name='employees')
+
+    can_external = models.BooleanField('Внешний вызов', default=False, help_text='Имеет доступ через rest-api')
+    encrypted_secret_key = models.CharField(max_length=255, editable=False, blank=True)
 
     full_access = models.ManyToManyField('Division', related_name='owners', verbose_name='Полный доступ')
     read_access = models.ManyToManyField('Division', related_name='readers', verbose_name='Доступ на чтение', blank=True)
@@ -64,6 +81,13 @@ class Employee(AccessMixin, models.Model):
 
     def get_default_division(self):
         return self.divisions.first()
+
+    def get_secret_key(self):
+        if self.id:
+            return decrypt(self.encrypted_secret_key, settings.SECRET_KEY.encode('utf-8'))
+
+    def set_secret_key(self, secret_key):
+        self.encrypted_secret_key = encrypt(secret_key, settings.SECRET_KEY.encode('utf-8'))
 
 
 class Division(AccessMixin, models.Model):

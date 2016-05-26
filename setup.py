@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='sw-django-perm-division',
-    version='0.0.5',
+    version='0.0.6',
     description='Soft Way company permission system based on employee division affiliations.',
     author='Telminov Sergey',
     author_email='sergey@telminov.ru',
@@ -14,5 +14,6 @@ setup(
     license='The MIT License',
     requires=[
         'django',
+        'sw-python-utils'
     ],
 )

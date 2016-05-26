@@ -1,10 +1,12 @@
 # coding: utf-8
+from django.conf import settings
 from django.conf.urls import url
 
 import division_perm.views.func
 import division_perm.views.division
 import division_perm.views.role
 import division_perm.views.employee
+import division_perm.views.rest
 
 
 urlpatterns = [
@@ -32,3 +34,10 @@ urlpatterns = [
     url(r'^division/(?P<division_pk>\d+)/role/(?P<pk>\d+)/delete/$', division_perm.views.role.Delete.as_view()),
 
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += [
+        url(r'^generate_sig/$', division_perm.views.rest.generate_sig),
+        url(r'^hello/$', division_perm.views.rest.hello),
+    ]

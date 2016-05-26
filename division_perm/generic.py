@@ -47,10 +47,10 @@ class ModifyAccessMixin(FuncAccessMixin):
             return False
 
         employee = self.request.user.employee
-        employee_division = set(models.Division.objects.filter(employees=employee))
+        employee_divisions = set(models.Division.objects.filter(employees=employee))
         access_divisions = self.get_access_divisions()
 
-        have_access = bool(employee_division & access_divisions)
+        have_access = bool(employee_divisions & access_divisions)
         return have_access
 
     def get_access_divisions(self) -> set:
@@ -95,3 +95,8 @@ class FormAccessMixin:
         form_kwargs['user'] = self.request.user
         return form_kwargs
 
+
+class RestMixin(ListAccessMixin):
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        serializer.instance.full_access.add(self.request.user.employee.get_default_division())

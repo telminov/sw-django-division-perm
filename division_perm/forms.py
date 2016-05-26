@@ -1,5 +1,6 @@
 # coding: utf-8
 from django import forms
+from django.conf import settings
 from django.contrib.auth import password_validation
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -74,6 +75,8 @@ class EmployeeUser(forms.ModelForm):
     )
     is_active = forms.BooleanField(label='Активен', required=False, initial=True)
 
+    secret_key = forms.CharField(label='Секретный ключ', max_length=100, widget=forms.PasswordInput, required=False)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -81,7 +84,26 @@ class EmployeeUser(forms.ModelForm):
             self.fields['username'].initial = self.instance.user.username
             self.fields['is_active'].initial = self.instance.user.is_active
 
+        if settings.DEBUG and self.instance.id and self.instance.encrypted_secret_key:
+            secret_key = self.instance.get_secret_key()
+            self.fields['secret_key'].help_text = secret_key
+
+    def clean(self):
+        cleaned_data = super().clean()
+        can_external = cleaned_data.get('can_external')
+        secret_key = cleaned_data.get('secret_key')
+        if can_external and not (self.instance.encrypted_secret_key or secret_key):
+            err_msg = 'Для внешних вызов нужно задать "Секретный ключ"'
+            self.add_error('can_external', err_msg)
+            self.add_error('secret_key', err_msg)
+
+        return cleaned_data
+
     def save(self, commit=True):
+        secret_key = self.cleaned_data.get('secret_key')
+        if secret_key:
+            self.instance.set_secret_key(secret_key)
+
         employee = super().save(commit=commit)
 
         if commit:
@@ -108,7 +130,7 @@ class EmployeeCreate(EmployeeDivision, EmployeeUser, AccessMixin, forms.ModelFor
     class Meta:
         model = models.Employee
         fields = ['username', 'password1', 'password2', 'last_name', 'first_name', 'middle_name',
-                  'divisions', 'full_access', 'read_access', 'is_active']
+                  'divisions', 'full_access', 'read_access', 'is_active', 'can_external']
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -143,7 +165,7 @@ class Employee(EmployeeDivision, EmployeeUser, AccessMixin, forms.ModelForm):
     class Meta:
         model = models.Employee
         fields = ['username', 'last_name', 'first_name', 'middle_name', 'divisions', 'full_access', 'read_access',
-                  'is_active']
+                  'is_active', 'can_external']
 
 
 class EmployeeRoles(forms.ModelForm):
