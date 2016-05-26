@@ -99,4 +99,25 @@ class FormAccessMixin:
 class RestMixin(ListAccessMixin):
     def perform_create(self, serializer):
         super().perform_create(serializer)
-        serializer.instance.full_access.add(self.request.user.employee.get_default_division())
+
+        if hasattr(serializer.instance, 'full_access'):
+            serializer.instance.full_access.add(self.request.user.employee.get_default_division())
+
+
+class RestNestedMixin(RestMixin):
+    main_model = None
+    main_lookup = None
+
+    def get_main_pk(self):
+        return self.kwargs[self.main_lookup + '_pk']
+
+    def filter_queryset(self, queryset):
+        params = {self.main_lookup + '__pk': self.get_main_pk()}
+        return queryset.filter(**params)
+
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == 'POST':
+            main_instance = self.main_model.objects.get(pk=self.get_main_pk())
+            instance_params = {self.main_lookup: main_instance}
+            kwargs['instance'] = self.model(**instance_params)
+        return super().get_serializer(*args, **kwargs)
