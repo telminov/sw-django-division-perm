@@ -12,8 +12,8 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     license='The MIT License',
-    requires=[
+    install_requires=[
         'django',
-        'sw-python-utils'
+        'sw-python-utils',
     ],
 )
