@@ -13,13 +13,13 @@ class EmployeeList(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='tester', email='tester@soft-way.biz', password='123')
         empl = models.Employee.objects.create(user=self.user, last_name='test', first_name='test', middle_name='test')
-        func = models.Func.objects.create(code=consts.SYS_READ_FUNC, name='test_name', level=0)
+        func_read = models.Func.objects.create(code=consts.SYS_READ_FUNC, name='test_read', level=0)
+        func_edit = models.Func.objects.create(code=consts.SYS_EDIT_FUNC, name='test_edit', level=0)
         division = models.Division.objects.create(name='IT')
         division.employees.add(empl)
-        role = models.Role.objects.create(name='манеджер', code=func.code, level=2, division=division)
+        role = models.Role.objects.create(name='манеджер', code=func_read.code, level=2, division=division)
         empl.roles.add(role)
         self.client.login(username=self.user.username, password='123')
-
 
     def get_url(self):
         url = reverse(self.view_path)
@@ -32,5 +32,14 @@ class EmployeeList(TestCase):
 
     def test_200(self):
         self.client.login(username=self.user.username, password='123')
-        response = self.client.get(self.get_url())
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertEqual(
+            response.redirect_chain[0],
+            ('/perm/employee/?sort=last_name', 302)
+        )
+
+    def test_object(self):
+        response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object_list'], 1)
+
