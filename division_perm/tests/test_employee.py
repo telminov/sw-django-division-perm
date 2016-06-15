@@ -1,4 +1,5 @@
 # coding: utf-8
+
 from .. import consts
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -105,5 +106,4 @@ class EmployeeCreate(BaseEmployee):
         self.assertEqual(created_empl.last_name, p['last_name'])
         self.assertEqual(created_empl.first_name, p['first_name'])
         self.assertEqual(created_empl.middle_name, p['middle_name'])
-
 
