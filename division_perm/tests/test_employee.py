@@ -13,30 +13,48 @@ class BaseEmployee(TestCase):
         self.user = User.objects.create_user(username='tester', email='tester@soft-way.biz', password='123')
         self.empl = models.Employee.objects.create(user=self.user, last_name='test', first_name='test', middle_name='test')
         func_read = models.Func.objects.create(code=consts.SYS_READ_FUNC, name='test_read', level=0)
-        func_edit = models.Func.objects.create(code=consts.SYS_EDIT_FUNC, name='test_edit', level=0)
+        models.Func.objects.create(code=consts.SYS_EDIT_FUNC, name='test_edit', level=0)
         self.division = models.Division.objects.create(name='Тех. поддержка')
         self.division.employees.add(self.empl)
-
-        role = models.Role.objects.create(name='манеджер', code=func_read.code, level=2, division=self.division)
-        self.empl.roles.add(role)
+        role_read = models.Role.objects.create(name='управляющий', code=func_read.code, level=9, division=self.division)
+        self.empl.roles.add(role_read)
         self.empl.full_access.add(self.division)
+        self.division.full_access.add(self.division)
         self.client.login(username=self.user.username, password='123')
 
     def get_url(self):
         url = reverse(self.view_path)
         return url
 
+    def get_url_param(self, args):
+        url = reverse(self.view_path, args=args)
+        return url
 
-class EmployeeList(BaseEmployee):
+    def get_emp_params(self):
+        p = {
+            'username': u'ivanov',
+            'password1': 't1234567',
+            'password2': 't1234567',
+            'last_name': u'Иванов',
+            'first_name': u'Иван',
+            'middle_name': u'Иванович',
+            'divisions': self.division.id,
+            'full_access': self.division.id,
+            'read_access': self.division.id,
+            'is_active': True,
+            'can_external': False,
+        }
+        return p
+
+class EmployeeListTest(BaseEmployee):
     view_path = 'perm_employee_list'
 
     def test_403(self):
-        self.client.logout()
+        self.empl.roles.clear()
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 403)
 
     def test_200(self):
-        self.client.login(username=self.user.username, password='123')
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(
             response.redirect_chain[0],
@@ -51,31 +69,29 @@ class EmployeeList(BaseEmployee):
 
     def test_empty_object(self):
         self.empl.read_access.clear()
+        self.empl.full_access.clear()
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['object_list'].count(), 0)
 
 
-class EmployeeDetail(BaseEmployee):
+class EmployeeDetailTest(BaseEmployee):
     view_path = 'perm_employee_detail'
-
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.empl.id])
-        return url
 
     def test_detail_403(self):
         self.empl.read_access.clear()
-        response = self.client.get(self.get_url())
+        self.empl.full_access.clear()
+        response = self.client.get(self.get_url_param([self.empl.id]))
         self.assertEqual(response.status_code, 403)
 
     def test_detail_200(self):
         self.empl.read_access.add(self.division)
-        response = self.client.get(self.get_url())
+        response = self.client.get(self.get_url_param([self.empl.id]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.empl, response.context['object'])
 
 
-class EmployeeCreate(BaseEmployee):
+class EmployeeCreateTest(BaseEmployee):
     view_path = 'perm_employee_create'
 
     def test_200(self):
@@ -83,7 +99,7 @@ class EmployeeCreate(BaseEmployee):
         self.assertEqual(response.status_code, 200)
 
     def test_create(self):
-        p = self.get_params()
+        p = self.get_emp_params()
         response = self.client.post(self.get_url(), p, follow=True)
         self.assertEqual(len(response.redirect_chain), 1)
         created_empl = models.Employee.objects.filter(user__username=p['username'])[0]
@@ -98,20 +114,16 @@ class EmployeeCreate(BaseEmployee):
         self.assertEqual(p['can_external'], created_empl.can_external)
 
 
-class EmployeeUpdate(BaseEmployee):
+class EmployeeUpdateTest(BaseEmployee):
     view_path = 'perm_employee_update'
 
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.empl.id])
-        return url
-
     def test_200(self):
-        response = self.client.get(self.get_url())
+        response = self.client.get(self.get_url_param([self.empl.id]))
         self.assertEqual(response.status_code, 200)
 
     def test_update(self):
-        p = self.get_params()
-        response = self.client.post(self.get_url(), p, follow=True)
+        p = self.get_emp_params()
+        response = self.client.post(self.get_url_param([self.empl.id]), p, follow=True)
         self.assertEqual(response.status_code, 200)
         update_empl = models.Employee.objects.get(id=self.empl.id)
         self.assertEqual(response.redirect_chain[0], ('/perm/employee/%s/' % update_empl.id, 302))
@@ -125,32 +137,24 @@ class EmployeeUpdate(BaseEmployee):
         self.assertEqual(p['can_external'], update_empl.can_external)
 
 
-class EmployeeDelete(BaseEmployee):
+class EmployeeDeleteTest(BaseEmployee):
     view_path = 'perm_employee_delete'
 
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.empl.id])
-        return url
-
     def test_200(self):
-        response = self.client.get(self.get_url())
+        response = self.client.get(self.get_url_param([self.empl.id]))
         self.assertEqual(response.status_code, 200)
 
-    def test_delete(self): # может стоит еще одно пользователя создать
-        response = self.client.post(self.get_url(), follow=True)
+    def test_delete(self):
+        response = self.client.post(self.get_url_param([self.empl.id]), follow=True)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(models.Employee.objects.filter(id=self.empl.id).count(), 0)
 
 
-class EmployeePasswordChange(BaseEmployee):
+class EmployeePasswordChangeTest(BaseEmployee):
     view_path = 'perm_employee_password_change'
 
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.empl.id])
-        return url
-
     def test_200(self):
-        response = self.client.get(self.get_url())
+        response = self.client.get(self.get_url_param([self.empl.id]))
         self.assertEqual(response.status_code, 200)
 
     def test_change(self):
@@ -160,19 +164,26 @@ class EmployeePasswordChange(BaseEmployee):
             'password1': new_password,
             'password2': new_password,
         }
-        response = self.client.post(self.get_url(), p, follow=True)
+        response = self.client.post(self.get_url_param([self.empl.id]), p, follow=True)
         self.assertEqual(response.redirect_chain[0], ('..', 302))
         update_empl = models.Employee.objects.get(id=self.empl.id)
         self.assertNotEqual(update_empl.user.password, old_password)
 
 
-class EmployeeRoles(BaseEmployee):
+class EmployeeRolesTest(BaseEmployee):
     view_path = 'perm_employee_roles'
 
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.empl.id])
-        return url
-
     def test_200(self):
-        response = self.client.get(self.get_url())
+        response = self.client.get(self.get_url_param([self.empl.id]))
         self.assertEqual(response.status_code, 200)
+
+    def test_edit_roles(self):
+        role = models.Role.objects.create(name=u'оператор', code=consts.SYS_EDIT_FUNC, level=3, division=self.division)
+
+        p = {
+            'user': self.empl.user,
+            'roles': [role.id],
+        }
+        response = self.client.post(self.get_url_param([self.empl.id]), p, follow=True)
+        self.assertEqual(response.redirect_chain[0], ('/perm/employee/%s/' % self.empl.id, 302))
+        self.assertIn(role, self.empl.roles.all())
