@@ -38,6 +38,7 @@ class ListFuncTest(BaseFuncTest):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(models.Func.objects.all())
 
+
 class DetailFuncTest(BaseFuncTest):
     view_path = 'perm_func_detail'
 
