@@ -65,7 +65,7 @@ class PasswordChange(TitleMixin, ModifyAccessMixin, LoginRequiredMixin, generic.
     model = models.Employee
     title = 'Изменение пароля'
     form_class = AdminPasswordChangeForm
-    template_name = 'perm/employee_password_change.html'
+    template_name = 'division_perm/employee_password_change.html'
     success_url = '..'
 
     def get_form_kwargs(self):
