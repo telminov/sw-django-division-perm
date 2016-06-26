@@ -5,11 +5,13 @@ from django.core.urlresolvers import reverse
 
 from django.test import TestCase
 from division_perm import models
+from division_perm.tests.base import ListTestMixin
+
 
 class BaseEmployee(TestCase):
     view_path = None
 
-    def setUp(self):
+    def setUp(self): # todo: fixture, английский тест, 'u'
         self.user = User.objects.create_user(username='tester', email='tester@soft-way.biz', password='123')
         self.empl = models.Employee.objects.create(user=self.user, last_name='test', first_name='test', middle_name='test')
         func_read = models.Func.objects.create(code=consts.SYS_READ_FUNC, name='test_read', level=0)
@@ -26,13 +28,13 @@ class BaseEmployee(TestCase):
         url = reverse(self.view_path)
         return url
 
-    def get_url_param(self, args):
+    def get_url_param(self, args): # todo: убрать
         url = reverse(self.view_path, args=args)
         return url
 
     def get_emp_params(self):
         p = {
-            'username': u'ivanov',
+            'username': 'ivanov',
             'password1': 't1234567',
             'password2': 't1234567',
             'last_name': u'Иванов',
@@ -46,33 +48,38 @@ class BaseEmployee(TestCase):
         }
         return p
 
-class EmployeeListTest(BaseEmployee):
+
+class EmployeeListTest(BaseEmployee, ListTestMixin):
     view_path = 'perm_employee_list'
+    success_url = reverse('perm_employee_list') + '?sort=last_name'
 
-    def test_403(self):
-        self.empl.roles.clear()
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)
-
-    def test_200(self):
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertEqual(
-            response.redirect_chain[0],
-            ('/perm/employee/?sort=last_name', 302)
-        )
-
-    def test_object(self):
-        self.empl.read_access.add(self.division)
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['object_list'].count(), 1)
-
-    def test_empty_object(self):
-        self.empl.read_access.clear()
-        self.empl.full_access.clear()
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['object_list'].count(), 0)
+# class EmployeeListTest(BaseEmployee):
+#     view_path = 'perm_employee_list'
+#
+#     def test_403(self): # todo: в mixin
+#         self.empl.roles.clear()
+#         response = self.client.get(self.get_url())
+#         self.assertEqual(response.status_code, 403)
+#
+#     def test_200(self):
+#         response = self.client.get(self.get_url(), follow=True)
+#         self.assertEqual(
+#             response.redirect_chain[0],
+#             ('/perm/employee/?sort=last_name', 302)
+#         )
+#
+#     def test_object(self):
+#         self.empl.read_access.add(self.division)
+#         response = self.client.get(self.get_url(), follow=True)
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.context['object_list'].count(), 1)    # FIXME
+#
+#     def test_empty_object(self):
+#         self.empl.read_access.clear()
+#         self.empl.full_access.clear()
+#         response = self.client.get(self.get_url(), follow=True)
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.context['object_list'].count(), 0)
 
 
 class EmployeeDetailTest(BaseEmployee):
@@ -146,7 +153,7 @@ class EmployeeDeleteTest(BaseEmployee):
 
     def test_delete(self):
         response = self.client.post(self.get_url_param([self.empl.id]), follow=True)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403) # todo: почему разобраться
         self.assertEqual(models.Employee.objects.filter(id=self.empl.id).count(), 0)
 
 
