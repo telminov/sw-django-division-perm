@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 
 from django.test import TestCase
 from division_perm import models
-from division_perm.tests.helpers import ListTestMixin
+from division_perm.tests.helpers import ListTestMixin, ListAccessTestMixin, ReadAccessTestMixin, DetailTestMixin
 
 
 class BaseEmployee(TestCase):
@@ -49,26 +49,22 @@ class BaseEmployee(TestCase):
         return p
 
 
-class EmployeeListTest(BaseEmployee, ListTestMixin):
+class EmployeeListTest(BaseEmployee, ListTestMixin, ListAccessTestMixin):
     view_path = 'perm_employee_list'
     success_url = reverse('perm_employee_list') + '?sort=last_name'
     model_access = models.Employee
 
 
-class EmployeeDetailTest(BaseEmployee):
+class EmployeeDetailTest(BaseEmployee, DetailTestMixin, ReadAccessTestMixin):
     view_path = 'perm_employee_detail'
+    model_access = models.Employee
 
-    def test_detail_403(self):
-        self.empl.read_access.clear()
-        self.empl.full_access.clear()
-        response = self.client.get(self.get_url_param([self.empl.id]))
-        self.assertEqual(response.status_code, 403)
+    def get_instance(self):
+        return self.empl
 
-    def test_detail_200(self):
-        self.empl.read_access.add(self.division)
-        response = self.client.get(self.get_url_param([self.empl.id]))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.empl, response.context['object'])
+    def get_url(self):
+        url = reverse(self.view_path, args=[self.get_instance().id])
+        return url
 
 
 class EmployeeCreateTest(BaseEmployee):
