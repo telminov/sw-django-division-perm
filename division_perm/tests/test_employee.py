@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 
 from django.test import TestCase
 from division_perm import models
-from division_perm.tests.base import ListTestMixin
+from division_perm.tests.helpers import ListTestMixin
 
 
 class BaseEmployee(TestCase):
@@ -52,34 +52,7 @@ class BaseEmployee(TestCase):
 class EmployeeListTest(BaseEmployee, ListTestMixin):
     view_path = 'perm_employee_list'
     success_url = reverse('perm_employee_list') + '?sort=last_name'
-
-# class EmployeeListTest(BaseEmployee):
-#     view_path = 'perm_employee_list'
-#
-#     def test_403(self): # todo: в mixin
-#         self.empl.roles.clear()
-#         response = self.client.get(self.get_url())
-#         self.assertEqual(response.status_code, 403)
-#
-#     def test_200(self):
-#         response = self.client.get(self.get_url(), follow=True)
-#         self.assertEqual(
-#             response.redirect_chain[0],
-#             ('/perm/employee/?sort=last_name', 302)
-#         )
-#
-#     def test_object(self):
-#         self.empl.read_access.add(self.division)
-#         response = self.client.get(self.get_url(), follow=True)
-#         self.assertEqual(response.status_code, 200)
-#         self.assertEqual(response.context['object_list'].count(), 1)    # FIXME
-#
-#     def test_empty_object(self):
-#         self.empl.read_access.clear()
-#         self.empl.full_access.clear()
-#         response = self.client.get(self.get_url(), follow=True)
-#         self.assertEqual(response.status_code, 200)
-#         self.assertEqual(response.context['object_list'].count(), 0)
+    model_access = models.Employee
 
 
 class EmployeeDetailTest(BaseEmployee):
