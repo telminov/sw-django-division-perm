@@ -44,3 +44,20 @@ class ListTestMixin(LoginRequiredTestMixin):
             response.context['object_list'].count(),
             self.model_access.objects.all().count()
         )
+
+
+class DetailTestMixin(LoginRequiredTestMixin):
+    model_access = None
+
+    def test_detail_403(self):
+        for obj in self.model_access.objects.all():
+            obj.full_access.clear()
+            obj.read_access.clear()
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 403)
+
+    def test_200(self):
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.get_instance(), response.context['object'])
+
