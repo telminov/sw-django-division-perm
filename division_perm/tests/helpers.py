@@ -46,7 +46,7 @@ class ListTestMixin(LoginRequiredTestMixin):
         )
 
 
-class DetailTestMixin(LoginRequiredTestMixin):
+class ReadAccessTestMixin(object):
     model_access = None
 
     def test_detail_403(self):
@@ -55,6 +55,9 @@ class DetailTestMixin(LoginRequiredTestMixin):
             obj.read_access.clear()
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 403)
+
+
+class DetailTestMixin(LoginRequiredTestMixin):
 
     def test_200(self):
         response = self.client.get(self.get_url())
