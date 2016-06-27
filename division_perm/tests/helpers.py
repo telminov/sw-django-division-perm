@@ -9,6 +9,17 @@ class LoginRequiredTestMixin(object):
         self.assertEqual(response.status_code, 403) # todo: страннова-то логичнее бы было редиректить на страницу логина
 
 
+class ListAccessTestMixin(object): # todo: вынесла отдельно, т.к func нет такого поведения
+
+    def test_empty_object(self):
+        for obj in self.model_access.objects.all():
+            obj.full_access.clear()
+            obj.read_access.clear()
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['object_list'].count())
+
+
 class ListTestMixin(LoginRequiredTestMixin):
     success_url = None
     model_access = None
@@ -25,14 +36,6 @@ class ListTestMixin(LoginRequiredTestMixin):
             response.redirect_chain[0],
             (self.success_url, 302)
         )
-
-    def test_empty_object(self):
-        for obj in self.model_access.objects.all():
-            obj.full_access.clear()
-            obj.read_access.clear()
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertFalse(response.context['object_list'].count())
 
     def test_object(self):
         response = self.client.get(self.get_url(), follow=True)
