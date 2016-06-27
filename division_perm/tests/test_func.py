@@ -5,6 +5,8 @@ from django.core.urlresolvers import reverse
 
 from django.test import TestCase
 from division_perm import models
+from division_perm.tests.helpers import ListTestMixin
+
 
 class BaseFuncTest(TestCase):
     view_path = None
@@ -24,19 +26,11 @@ class BaseFuncTest(TestCase):
         url = reverse(self.view_path)
         return url
 
-class ListFuncTest(BaseFuncTest):
+
+class ListFuncTest(BaseFuncTest, ListTestMixin):
     view_path = 'perm_func_list'
-
-    def test_403(self):
-        self.empl.roles.all().delete()
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)
-
-    def test_200(self):
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertEqual(response.redirect_chain[0], ('/perm/func/?sort=code', 302))
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(models.Func.objects.all())
+    success_url = reverse('perm_func_list') + '?sort=code'
+    model_access = models.Func
 
 
 class DetailFuncTest(BaseFuncTest):
