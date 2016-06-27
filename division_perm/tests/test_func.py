@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 
 from django.test import TestCase
 from division_perm import models
-from division_perm.tests.helpers import ListTestMixin
+from division_perm.tests.helpers import ListTestMixin, DetailTestMixin
 
 
 class BaseFuncTest(TestCase):
@@ -16,9 +16,9 @@ class BaseFuncTest(TestCase):
         self.empl = models.Employee.objects.create(user=self.user, last_name='test', first_name='test', middle_name='test')
         func_edit = models.Func.objects.create(code=consts.SYS_EDIT_FUNC, name='test_edit', level=5)
         self.func_read = models.Func.objects.create(code=consts.SYS_READ_FUNC, name='test_read', level=0)
-        self.division = models.Division.objects.create(name='Тех. поддержка')
+        self.division = models.Division.objects.create(name='Tech Support')
         self.division.employees.add(self.empl)
-        role_read = models.Role.objects.create(name='управляющий', code=self.func_read.code, level=9, division=self.division)
+        role_read = models.Role.objects.create(name='manger', code=self.func_read.code, level=9, division=self.division)
         self.empl.roles.add(role_read)
         self.client.login(username=self.user.username, password='123')
 
@@ -33,20 +33,12 @@ class ListFuncTest(BaseFuncTest, ListTestMixin):
     model_access = models.Func
 
 
-class DetailFuncTest(BaseFuncTest):
+class DetailFuncTest(BaseFuncTest, DetailTestMixin):
     view_path = 'perm_func_detail'
 
     def get_url(self):
         url = reverse(self.view_path, args=[self.func_read.id])
         return url
 
-    def test_detail_403(self):
-        models.Division.objects.all().delete()
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)
-
-    def test_detail_200(self):
-        self.empl.read_access.add(self.division)
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.func_read, response.context['object'])
+    def get_instance(self):
+        return self.func_read
