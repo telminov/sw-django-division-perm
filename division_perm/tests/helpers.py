@@ -110,7 +110,7 @@ class LoginRequiredTestMixin(object):
         self.assertEqual(response.status_code, 403) # todo: страннова-то логичнее бы было редиректить на страницу логина
 
 
-class ListTestMixin(FuncAccessTestMixin, LoginRequiredTestMixin, ListAccessTestMixin):
+class ListTestMixin(LoginRequiredTestMixin):
     success_url = None
     model_access = None
     func_code = None
