@@ -1,21 +1,20 @@
 # coding: utf-8
 from django.core.urlresolvers import reverse
 
-from division_perm.generic import CreateMainEntityMixin
 from division_perm import models
 
-class CreateMainEntityTestMixin(object): # CreateMainEntityMixin -используется только в этом месте , но никогда не выполняется
+class CreateMainEntityTestMixin(object): # todo: from division_perm.generic.CreateMainEntityMixin -используется только в этом месте , но никогда не выполняется
    pass
 
 class FuncAccessTestMixin(object):
 
-    def test_without_func_code(self): # todo: избыточный код, везде есть func_code
+    def test_without_func_code(self): # todo: избыточный код, везде в функциях есть func_code
         pass
 
     def test_no_is_authenticated(self):
         self.client.logout()
         response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)  # todo: избыточный код, везде есть LoginRequiredMixin
+        self.assertEqual(response.status_code, 403)  # todo: избыточный код, везде есть LoginRequiredMixin зачем доп. проверка?
 
     def test_without_level(self):
         self.user.employee.roles.all().delete()
@@ -132,7 +131,7 @@ class ListTestMixin(LoginRequiredTestMixin):
         )
 
 
-class DetailTestMixin(LoginRequiredTestMixin, ReadAccessTestMixin):
+class DetailTestMixin(LoginRequiredTestMixin):
     model_access = None
 
     def test_200(self):
@@ -140,3 +139,15 @@ class DetailTestMixin(LoginRequiredTestMixin, ReadAccessTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.get_instance(), response.context['object'])
 
+
+class DeleteTestMixin(LoginRequiredTestMixin, ModifyAccessTestMixin):
+    model = None
+
+    def test_200(self):
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_delete(self):
+        response = self.client.post(self.get_url(), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.model.objects.filter(id=self.get_instance().id).count(), 0)
