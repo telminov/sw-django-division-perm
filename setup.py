@@ -2,6 +2,11 @@
 # python setup.py sdist register upload
 from setuptools import setup, find_packages
 
+
+def get_requires():
+    with open('requirements.txt') as requirements_file:
+        return requirements_file.readlines()
+
 setup(
     name='sw-django-perm-division',
     version='0.0.6',
@@ -12,8 +17,5 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     license='The MIT License',
-    install_requires=[
-        'django',
-        'sw-python-utils',
-    ],
+    install_requires=get_requires()
 )
