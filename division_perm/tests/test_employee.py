@@ -7,14 +7,14 @@ from division_perm import models
 from division_perm.tests.base import BaseTest
 from division_perm.tests.helpers import *
 
-class BaseEmployee(BaseTest):
+class BaseEmployee(BaseTest): # todo: порядок классов!!
     view_path = None
 
     def generate_data(self):
         self.empl = self.user.employee
         self.division = self.empl.divisions.all()[0]
 
-    def get_emp_params(self):
+    def get_params(self):
         p = {
             'username': 'ivanov',
             'password1': 't1234567',
@@ -50,28 +50,21 @@ class EmployeeDetailTest(BaseEmployee, DetailTestMixin, ReadAccessTestMixin):
         return url
 
 
-class EmployeeCreateTest(BaseEmployee):
+class EmployeeCreateTest(CreateTestMixin, BaseEmployee):
     view_path = 'perm_employee_create'
+    model = models.Employee
+    success_path = 'perm_employee_detail'
+    exclude_fields = ['password1', 'password2', 'username', 'is_active']
 
-    def test_200(self):
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 200)
-
-    def test_create(self):
-        p = self.get_emp_params()
-        response = self.client.post(self.get_url(), p, follow=True)
-        self.assertEqual(len(response.redirect_chain), 1)
-        created_empl = models.Employee.objects.filter(user__username=p['username'])[0]
-        self.assertEqual(response.redirect_chain[0], ('/perm/employee/%s/' % created_empl.id, 302))
-        self.assertEqual(p['last_name'], created_empl.last_name)
-        self.assertEqual(p['first_name'], created_empl.first_name)
-        self.assertEqual(p['middle_name'], created_empl.middle_name)
-        self.assertIn(p['divisions'], created_empl.divisions.all().values_list('id', flat=True))
-        self.assertIn(p['full_access'], created_empl.full_access.all().values_list('id', flat=True))
-        self.assertIn(p['read_access'], created_empl.read_access.all().values_list('id', flat=True))
-        self.assertEqual(p['is_active'], created_empl.user.is_active)
-        self.assertEqual(p['can_external'], created_empl.can_external)
-
+    def get_ident_param(self):
+        p = self.get_params()
+        return {
+            'user__username': p['username'],
+            'last_name': p['last_name'],
+            'first_name': p['first_name'],
+            'divisions__id__in': [p['divisions']],
+            'full_access__id__in': [p['full_access']],
+        }
 
 class EmployeeUpdateTest(BaseEmployee):
     view_path = 'perm_employee_update'
@@ -85,7 +78,7 @@ class EmployeeUpdateTest(BaseEmployee):
         self.assertEqual(response.status_code, 200)
 
     def test_update(self):
-        p = self.get_emp_params()
+        p = self.get_params()
         response = self.client.post(self.get_url(), p, follow=True)
         self.assertEqual(response.status_code, 200)
         update_empl = models.Employee.objects.get(id=self.empl.id)
