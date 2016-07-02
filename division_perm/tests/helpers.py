@@ -1,5 +1,7 @@
 # coding: utf-8
+import datetime
 from django.core.urlresolvers import reverse
+import django.db.models
 
 from division_perm import models
 
@@ -138,6 +140,45 @@ class DetailTestMixin(LoginRequiredTestMixin):
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.get_instance(), response.context['object'])
+
+
+
+class CreateTestMixin(object):
+    view_path = 'perm_employee_create'
+    models = None
+    success_path = None
+
+    def test_is_not_authenticated(self): # todo: здесь правильно редиректится, LoginRequiredTestMixin - сюда не подходит, но может стоит все же доп. проверку засунуть в LoginRequiredTestMixin
+        self.client.logout()
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertIn('login/?next', response.redirect_chain[0][0])
+
+    def test_200(self):
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_create(self):
+        params = self.get_params()
+        response = self.client.post(self.get_url(), params, follow=True)
+        if 'form' in response.context:
+            self.assertFalse(response.context['form'].errors)
+        self.assertEqual(len(response.redirect_chain), 1)
+        created_obj = self.model.objects.filter(**self.get_ident_param())[0]
+        success_url = reverse(self.success_path, args=[created_obj.id])
+        self.assertEqual(response.redirect_chain[0], (success_url, 302))
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class DeleteTestMixin(LoginRequiredTestMixin, ModifyAccessTestMixin):
