@@ -4,7 +4,7 @@ from .. import consts
 from division_perm.tests.base import BaseTest
 from division_perm.tests.helpers import *
 
-class BaseEmployee(BaseTest):
+class BaseEmployeeTest(BaseTest):
     view_path = None
 
     def get_params(self):
@@ -42,14 +42,14 @@ class BaseEmployee(BaseTest):
         }
 
 
-class EmployeeListTest(FuncAccessTestMixin, ListTestMixin, ListAccessTestMixin, BaseEmployee):
+class EmployeeListTest(FuncAccessTestMixin, ListTestMixin, ListAccessTestMixin, BaseEmployeeTest):
     view_path = 'perm_employee_list'
     success_url = reverse('perm_employee_list') + '?sort=last_name'
     model_access = models.Employee
     func_code = consts.SYS_READ_FUNC
 
 
-class EmployeeDetailTest(DetailTestMixin, ReadAccessTestMixin, BaseEmployee):
+class EmployeeDetailTest(DetailTestMixin, ReadAccessTestMixin, BaseEmployeeTest):
     view_path = 'perm_employee_detail'
     model_access = models.Employee
 
@@ -61,17 +61,16 @@ class EmployeeDetailTest(DetailTestMixin, ReadAccessTestMixin, BaseEmployee):
         return url
 
 
-class EmployeeCreateTest(CreateTestMixin, BaseEmployee):
+class EmployeeCreateTest(CreateTestMixin, BaseEmployeeTest):
     view_path = 'perm_employee_create'
     model = models.Employee
     success_path = 'perm_employee_detail'
-    exclude_fields = ['password1', 'password2', 'username', 'is_active']
 
     def get_ident_param(self):
         return self.get_ident_emp_param()
 
 
-class EmployeeUpdateTest(UpdateTestMixin, ModifyAccessTestMixin, BaseEmployee):
+class EmployeeUpdateTest(UpdateTestMixin, ModifyAccessTestMixin, BaseEmployeeTest):
     view_path = 'perm_employee_update'
     model = models.Employee
     success_path = 'perm_employee_detail'
@@ -87,22 +86,19 @@ class EmployeeUpdateTest(UpdateTestMixin, ModifyAccessTestMixin, BaseEmployee):
        return self.get_ident_emp_param()
 
 
-class EmployeeDeleteTest(DeleteTestMixin, BaseEmployee):
+class EmployeeDeleteTest(DeleteTestMixin, BaseEmployeeTest):
     view_path = 'perm_employee_delete'
     model = models.Employee
 
-    def generate_data(self):
-        self.other_empl = models.Employee.objects.exclude(id=self.user.employee.id)[0]
+    def get_instance(self):
+        return models.Employee.objects.exclude(id=self.user.employee.id)[0]
 
     def get_url(self):
         url = reverse(self.view_path, args=[self.get_instance().id])
         return url
 
-    def get_instance(self):
-        return self.other_empl
 
-
-class EmployeePasswordChangeTest(UpdateTestMixin, ModifyAccessTestMixin,  BaseEmployee):
+class EmployeePasswordChangeTest(UpdateTestMixin, ModifyAccessTestMixin,  BaseEmployeeTest):
     view_path = 'perm_employee_password_change'
     model = models.Employee
 
@@ -128,7 +124,7 @@ class EmployeePasswordChangeTest(UpdateTestMixin, ModifyAccessTestMixin,  BaseEm
         self.assertNotEqual(update_empl.user.password, old_password)
 
 
-class EmployeeRolesTest(UpdateTestMixin, ModifyAccessTestMixin, BaseEmployee):
+class EmployeeRolesTest(UpdateTestMixin, ModifyAccessTestMixin, BaseEmployeeTest):
     view_path = 'perm_employee_roles'
     model = models.Employee
     success_path = 'perm_employee_detail'
