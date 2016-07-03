@@ -89,8 +89,8 @@ class ListAccessTestMixin(object):
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertListEqual(
-            list(response.context['object_list'].values_list('id', flat=True)),
-            list(self.model_access.GetAccessible(self.user).values_list('id', flat=True))
+            sorted(list(response.context['object_list'].values_list('id', flat=True))),
+            sorted(list(self.model_access.GetAccessible(self.user).values_list('id', flat=True)))
         )
 
 
@@ -160,7 +160,7 @@ class CreateTestMixin(object):
         response = self.client.post(self.get_url(), params, follow=True)
         if 'form' in response.context:
             self.assertFalse(response.context['form'].errors)
-        self.assertEqual(len(response.redirect_chain), 1)
+        self.assertTrue(len(response.redirect_chain))
         created_obj = self.model.objects.filter(**self.get_ident_param())[0]
         success_url = reverse(self.success_path, args=[created_obj.id])
         self.assertEqual(response.redirect_chain[0], (success_url, 302))
@@ -173,7 +173,7 @@ class UpdateTestMixin(CreateTestMixin):
         response = self.client.post(self.get_url(), params, follow=True)
         if 'form' in response.context:
             self.assertFalse(response.context['form'].errors)
-        self.assertEqual(len(response.redirect_chain), 1)
+        self.assertTrue(len(response.redirect_chain))
         update_obj = self.model.objects.get(id=self.get_instance().id, **self.get_ident_param())
         success_url = reverse(self.success_path, args=[update_obj.id])
         self.assertEqual(response.redirect_chain[0], (success_url, 302))
@@ -187,6 +187,7 @@ class DeleteTestMixin(LoginRequiredTestMixin, ModifyAccessTestMixin):
         self.assertEqual(response.status_code, 200)
 
     def test_delete(self):
+        obj_id = self.get_instance().id
         response = self.client.post(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.model.objects.filter(id=self.get_instance().id).count(), 0)
+        self.assertEqual(self.model.objects.filter(id=obj_id).count(), 0)
