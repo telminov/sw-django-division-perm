@@ -82,7 +82,7 @@ class ReadAccessTestMixin(object):
         self.assertEqual(response.status_code, 403)
 
 
-class ListAccessTestMixin(object): # todo: вынесла отдельно, т.к func нет такого поведения
+class ListAccessTestMixin(object):
 
     def test_get_queryset(self):
         response = self.client.get(self.get_url(), follow=True)
@@ -107,8 +107,11 @@ class LoginRequiredTestMixin(object):
 
     def test_is_not_authenticated(self):
         self.client.logout()
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403) # todo: страннова-то логичнее бы было редиректить на страницу логина
+        response = self.client.get(self.get_url(),follow=True)
+        if response.status_code == 302:
+            self.assertIn('login/?next', response.redirect_chain[0][0]) # todo:  в случае с create
+        else:
+            self.assertEqual(response.status_code, 403) # todo: страннова-то логичнее бы было редиректить на страницу логина
 
 
 class ListTestMixin(LoginRequiredTestMixin):
@@ -142,22 +145,16 @@ class DetailTestMixin(LoginRequiredTestMixin):
         self.assertEqual(self.get_instance(), response.context['object'])
 
 
-
 class CreateTestMixin(object):
     view_path = 'perm_employee_create'
     models = None
     success_path = None
 
-    def test_is_not_authenticated(self): # todo: здесь правильно редиректится, LoginRequiredTestMixin - сюда не подходит, но может стоит все же доп. проверку засунуть в LoginRequiredTestMixin
-        self.client.logout()
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertIn('login/?next', response.redirect_chain[0][0])
-
     def test_200(self):
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
 
-    def test_create(self):
+    def test_update(self):
         params = self.get_params()
         response = self.client.post(self.get_url(), params, follow=True)
         if 'form' in response.context:
@@ -168,17 +165,17 @@ class CreateTestMixin(object):
         self.assertEqual(response.redirect_chain[0], (success_url, 302))
 
 
+class UpdateTestMixin(CreateTestMixin):
 
-
-
-
-
-
-
-
-
-
-
+    def test_update(self):
+        params = self.get_params()
+        response = self.client.post(self.get_url(), params, follow=True)
+        if 'form' in response.context:
+            self.assertFalse(response.context['form'].errors)
+        self.assertEqual(len(response.redirect_chain), 1)
+        update_obj = self.model.objects.get(id=self.get_instance().id, **self.get_ident_param())
+        success_url = reverse(self.success_path, args=[update_obj.id])
+        self.assertEqual(response.redirect_chain[0], (success_url, 302))
 
 
 class DeleteTestMixin(LoginRequiredTestMixin, ModifyAccessTestMixin):
