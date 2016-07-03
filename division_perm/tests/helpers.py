@@ -34,10 +34,11 @@ class FuncAccessTestMixin(object):
         models.Func.objects.filter(code=self.func_code).update(level=5)
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.redirect_chain[0],
-            (self.success_url, 302)
-        )
+        if hasattr(self, 'success_url'):
+            self.assertEqual(
+                response.redirect_chain[0],
+                (self.success_url, 302)
+            )
 
 class ModifyAccessTestMixin(object):
 
