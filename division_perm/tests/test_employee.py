@@ -7,11 +7,9 @@ from division_perm.tests.helpers import *
 class BaseEmployee(BaseTest):
     view_path = None
 
-    def generate_data(self):
-        self.empl = self.user.employee
-        self.division = self.empl.divisions.all()[0]
-
     def get_params(self):
+        division = models.Division.objects.all()[0]
+
         p = {
             'username': 'ivanov',
             'password1': 't1234567',
@@ -19,9 +17,9 @@ class BaseEmployee(BaseTest):
             'last_name': 'Ivanov',
             'first_name': 'Ivan',
             'middle_name': 'Ivanovich',
-            'divisions': self.division.id,
-            'full_access': self.division.id,
-            'read_access': self.division.id,
+            'divisions': division.id,
+            'full_access': division.id,
+            'read_access': division.id,
             'is_active': True,
             'can_external': False,
         }
@@ -56,7 +54,7 @@ class EmployeeDetailTest(DetailTestMixin, ReadAccessTestMixin, BaseEmployee):
     model_access = models.Employee
 
     def get_instance(self):
-        return self.empl
+        return self.user.employee
 
     def get_url(self):
         url = reverse(self.view_path, args=[self.get_instance().id])
@@ -79,7 +77,7 @@ class EmployeeUpdateTest(UpdateTestMixin, ModifyAccessTestMixin, BaseEmployee):
     success_path = 'perm_employee_detail'
 
     def get_instance(self):
-        return self.empl
+        return self.user.employee
 
     def get_url(self):
         url = reverse(self.view_path, args=[self.get_instance().id])
@@ -108,12 +106,12 @@ class EmployeePasswordChangeTest(UpdateTestMixin, ModifyAccessTestMixin,  BaseEm
     view_path = 'perm_employee_password_change'
     model = models.Employee
 
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.empl.id])
-        return url
-
     def get_instance(self):
         return self.user.employee
+
+    def get_url(self):
+        url = reverse(self.view_path, args=[self.get_instance().id])
+        return url
 
     def get_params(self):
         return {
@@ -139,12 +137,12 @@ class EmployeeRolesTest(UpdateTestMixin, ModifyAccessTestMixin, BaseEmployee):
         return self.user.employee
 
     def get_url(self):
-        url = reverse(self.view_path, args=[self.empl.id])
+        url = reverse(self.view_path, args=[self.get_instance().id])
         return url
 
     def get_params(self):
         return {
-            'user': self.empl.user,
+            'user': self.get_instance().user,
             'roles': [self.get_instance().id],
         }
 
