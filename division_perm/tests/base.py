@@ -17,13 +17,18 @@ class BaseTest(TestCase):
         empl = models.Employee.objects.create(user=self.user, last_name='other_test', first_name='other_test', middle_name='other_test')
         other_empl = models.Employee.objects.create(user=other_user, last_name='test', first_name='test', middle_name='test')
         func_edit = models.Func.objects.get(code=consts.SYS_EDIT_FUNC)
+        func_read = models.Func.objects.get(code=consts.SYS_READ_FUNC)
         division = models.Division.objects.create(name='TechSupport')
+        division2 = models.Division.objects.create(name='Systema')
         division.employees.add(empl)
+        division2.employees.add(empl)
         role_edit = models.Role.objects.create(name='Manager', code=func_edit.code, level=9, division=division)
-        empl.roles.add(role_edit)
-        empl.full_access.add(division)
-        other_empl.full_access.add(division)
-        division.full_access.add(division)
+        role_edit2 = models.Role.objects.create(name='Operator', code=func_read.code, level=7, division=division2)
+        empl.roles.add(role_edit, role_edit2)
+        empl.full_access.add(division, division2)
+        other_empl.full_access.add(division, division2)
+        division.full_access.add(division, division2)
+
         self.client.login(username=self.user.username, password='123')
 
 
