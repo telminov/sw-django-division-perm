@@ -26,7 +26,6 @@ class BaseTest(TestCase):
         division.full_access.add(division)
         self.client.login(username=self.user.username, password='123')
 
-        self.generate_data()
 
     def get_url(self):
         url = reverse(self.view_path)
