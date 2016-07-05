@@ -9,3 +9,12 @@ class Division(factory.django.DjangoModelFactory):
         model = models.Division
 
     name = factory.fuzzy.FuzzyText(length=15, prefix='test_division_')
+
+
+class Role(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Role
+
+    division = factory.SubFactory(Division)
+    code = factory.fuzzy.FuzzyText(length=15, prefix='test_role_code_')
+    name = factory.fuzzy.FuzzyText(length=15, prefix='test_role_name_')

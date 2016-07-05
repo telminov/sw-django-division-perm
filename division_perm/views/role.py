@@ -5,10 +5,10 @@ from djutils.views.generic import TitleMixin
 from .. import models
 from .. import forms
 from .. import consts
-from ..generic import ReadAccessMixin, ModifyAccessMixin
+from ..generic import ReadAccessMixin, ModifyAccessMixin, FuncAccessMixin
 
 
-class Create(TitleMixin, ModifyAccessMixin, LoginRequiredMixin, generic.CreateView):
+class Create(TitleMixin, FuncAccessMixin, LoginRequiredMixin, generic.CreateView):
     func_code = consts.SYS_EDIT_FUNC
     title = 'Регистрация роли'
     model = models.Role
