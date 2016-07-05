@@ -11,6 +11,13 @@ class Division(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText(length=15, prefix='test_division_')
 
 
+class Func(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Func
+
+    name = factory.fuzzy.FuzzyText(length=15, prefix='test_func_')
+
+
 class Role(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Role
