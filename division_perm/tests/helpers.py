@@ -59,12 +59,19 @@ class SortTestMixin(BaseMixin):
         )
 
 
-class SingleObjectTestMixin:
+class SingleObjectTestMixin(BaseMixin):
 
     def get_instance(self):
         if not hasattr(self, 'instance'):
             self.instance = self.factory_class()
         return self.instance
+
+    def get_main_entity(self):
+        instance = self.get_instance()
+        if hasattr(self.view_class.model, 'main_entity_lookup') and self.view_class.model.main_entity_lookup:
+            return getattr(instance, self.view_class.model.main_entity_lookup)
+        else:
+            return instance
 
     def get_url(self):
         url = reverse(self.view_path, args=[self.get_instance().id])
@@ -105,12 +112,12 @@ class ModifyAccessTestMixin(SingleObjectTestMixin, BaseMixin):
     def generate_data(self):
         super().generate_data()
         division = self.employee.get_default_division()
-        self.get_instance().full_access.add(division)
+        self.get_main_entity().full_access.add(division)
 
     def test_read_access_is_not_enough(self):
-        self.get_instance().full_access.clear()
+        self.get_main_entity().full_access.clear()
         division = self.employee.get_default_division()
-        self.get_instance().read_access.add(division)
+        self.get_main_entity().read_access.add(division)
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 403)
 
@@ -141,18 +148,18 @@ class ReadAccessTestMixin(SingleObjectTestMixin, BaseMixin):
     def generate_data(self):
         super().generate_data()
         division = self.employee.divisions.all()[0]
-        self.get_instance().read_access.add(division)
+        self.get_main_entity().read_access.add(division)
 
     def test_no_access(self):
-        self.instance.read_access.clear()
-        self.instance.full_access.clear()
+        self.get_main_entity().read_access.clear()
+        self.get_main_entity().full_access.clear()
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 403)
 
     def test_read_available_for_full_access(self):
-        self.instance.read_access.clear()
+        self.get_main_entity().read_access.clear()
         division = self.employee.divisions.all()[0]
-        self.instance.full_access.add(division)
+        self.get_main_entity().full_access.add(division)
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
 

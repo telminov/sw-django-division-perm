@@ -1,7 +1,9 @@
 # coding: utf-8
+from .. import models
 from ..views import division
 from ..tests.base import BaseTest
-from ..tests.helpers import *
+from ..tests.helpers import ReadAccessTestMixin, FuncAccessTestMixin, LoginRequiredTestMixin, SortTestMixin, \
+    ListAccessTestMixin, CreateTestMixin, UpdateTestMixin, DeleteTestMixin
 from .. import factories
 
 
@@ -20,7 +22,6 @@ class DetailTest(ReadAccessTestMixin, FuncAccessTestMixin, LoginRequiredTestMixi
 class CreateTest(CreateTestMixin, FuncAccessTestMixin, LoginRequiredTestMixin, BaseTest):
     view_path = 'perm_division_create'
     view_class = division.Create
-    factory_class = factories.Division
 
     def get_create_data(self) -> dict:
         return {
