@@ -37,7 +37,7 @@ class Detail(SortMixin, ReadAccessMixin, TitleMixin, LoginRequiredMixin, generic
         return c
 
 
-class Create(TitleMixin, FormAccessMixin, LoginRequiredMixin, generic.CreateView):
+class Create(TitleMixin, FormAccessMixin, FuncAccessMixin, LoginRequiredMixin, generic.CreateView):
     func_code = consts.SYS_EDIT_FUNC
     title = 'Регистрация подразделения'
     model = models.Division

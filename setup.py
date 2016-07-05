@@ -17,5 +17,8 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     license='The MIT License',
-    install_requires=get_requires()
+    install_requires=get_requires(),
+    tests_require=[
+        'factory_boy',
+    ]
 )
