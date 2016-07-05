@@ -1,193 +1,216 @@
 # coding: utf-8
-import datetime
 from django.core.urlresolvers import reverse
-import django.db.models
+from django.contrib.auth.models import User
 
-from division_perm import models
+from .. import models
 
-class CreateMainEntityTestMixin(object): # todo: from division_perm.generic.CreateMainEntityMixin -используется только в этом месте , но никогда не выполняется
-   pass
 
-class FuncAccessTestMixin(object):
+class BaseMixin:
+    view_path = None    # ''
+    view_class = None   #
+    factory_class = None
 
-    def test_without_func_code(self): # todo: избыточный код, везде в функциях есть func_code
-        pass
+    def setUp(self):
+        super().setUp()
+        self.generate_data()
 
-    def test_no_is_authenticated(self):
-        self.client.logout()
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)  # todo: избыточный код, везде есть LoginRequiredMixin зачем доп. проверка?
+    def get_url(self):
+        url = reverse(self.view_path)
+        return url
 
-    def test_without_level(self):
-        self.user.employee.roles.all().delete()
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)
+    def generate_data(self):
+        self.user = User.objects.create_user(username='tester', email='tester@soft-way.biz', password='123')
+        self.employee = models.Employee.objects.create(user=self.user, last_name=self.user.username)
 
-    def test_priority_func_level(self):
-        self.user.employee.roles.all().update(level=5)
-        models.Func.objects.filter(code=self.func_code).update(level=10)
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)
+        division = models.Division.objects.create(name='testing')
+        division.employees.add(self.employee)
+        division.full_access.add(division)
 
-    def test_priority_user_level(self):
-        self.user.employee.roles.all().update(level=10)
-        models.Func.objects.filter(code=self.func_code).update(level=5)
+    def test_open_success(self):
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
-        if hasattr(self, 'success_url'):
-            self.assertEqual(
-                response.redirect_chain[0],
-                (self.success_url, 302)
-            )
-
-class ModifyAccessTestMixin(object):
-
-    def test_without_passed(self):
-        models.Func.objects.all().update(level=10)
-        self.user.employee.roles.all().update(level=5)
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)
-
-    def test_with_have_access(self):
-        self.user.employee.roles.all().update(level=10)
-        models.Func.objects.all().update(level=10)
-        division = self.user.employee.divisions.all()[0]
-        self.get_instance().full_access.add(division)
-
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 200)
-
-    def test_without_have_access(self):
-        self.user.employee.roles.all().update(level=10)
-        models.Func.objects.all().update(level=10)
-        self.get_instance().full_access.clear()
-
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)
 
 
-class ReadAccessTestMixin(object):
+class LoginRequiredTestMixin(BaseMixin):
 
-    def test_access_divisions(self):
-        division = models.Division.objects.all()[0]
-        self.get_instance().read_access.add(division)
-
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.get_instance(), response.context['object'])
-
-    def test_without_access_divisions(self):
-        self.get_instance().read_access.clear()
-        self.get_instance().full_access.clear()
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 403)
-
-
-class ListAccessTestMixin(object):
-
-    def test_get_queryset(self):
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertListEqual(
-            sorted(list(response.context['object_list'].values_list('id', flat=True))),
-            sorted(list(self.model_access.GetAccessible(self.user).values_list('id', flat=True)))
-        )
-
-
-class FormAccessTestMixin(object): # todo: надо подумать
-    pass
-
-class RestTestMixin(object): # todo: используется?
-    pass
-
-class RestNestedTestMixin(object): # todo: используется?
-    pass
-
-
-class LoginRequiredTestMixin(object):
+    def setUp(self):
+        super().setUp()
+        self.client.login(username=self.user.username, password='123')
 
     def test_is_not_authenticated(self):
         self.client.logout()
         response = self.client.get(self.get_url(),follow=True)
-        if response.status_code == 302:
-            self.assertIn('login/?next', response.redirect_chain[0][0]) # todo:  в случае с create
-        else:
-            self.assertEqual(response.status_code, 403) # todo: страннова-то логичнее бы было редиректить на страницу логина
+        self.assertEqual(response.status_code, 403)
 
 
-class ListTestMixin(LoginRequiredTestMixin):
-    success_url = None
-    model_access = None
-    func_code = None
+class SortTestMixin(BaseMixin):
 
-    def test_200(self):
+    def test_sort_redirect(self):
+        if not (hasattr(self.view_class, 'sort_params') and self.view_class.sort_params):
+            return
+
+        sort_param = self.view_class.sort_params[0]
+        sorted_url = reverse(self.view_path) + '?sort=' + sort_param
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.redirect_chain[0],
-            (self.success_url, 302)
+            (sorted_url, 302)
         )
 
-    def test_object(self):
+
+class SingleObjectTestMixin:
+
+    def get_instance(self):
+        if not hasattr(self, 'instance'):
+            self.instance = self.factory_class()
+        return self.instance
+
+    def get_url(self):
+        url = reverse(self.view_path, args=[self.get_instance().id])
+        return url
+
+
+class FuncAccessTestMixin(BaseMixin):
+
+    def generate_data(self):
+        super().generate_data()
+
+        func, _ = models.Func.objects.get_or_create(
+            code=self.view_class.func_code,
+            defaults={'name': self.view_class.func_code, 'level': 5},
+        )
+
+        division = self.employee.divisions.all()[0]
+        role = models.Role.objects.create(
+            division=division,
+            code='test_role',
+            name='test_role',
+            level=func.level,
+        )
+        role.employees.add(self.employee)
+
+        self.employee = models.Employee.objects.get(id=self.employee.id)
+
+    def test_role_level_must_be_greater_func_level(self):
+        func = models.Func.objects.get(code=self.view_class.func_code)
+        self.employee.roles.update(level=func.level-1)
+
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertEqual(response.status_code, 403)
+
+
+class ModifyAccessTestMixin(SingleObjectTestMixin, BaseMixin):
+
+    def generate_data(self):
+        super().generate_data()
+        division = self.employee.get_default_division()
+        self.get_instance().full_access.add(division)
+
+    def test_read_access_is_not_enough(self):
+        self.get_instance().full_access.clear()
+        division = self.employee.get_default_division()
+        self.get_instance().read_access.add(division)
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertEqual(response.status_code, 403)
+
+
+class ListAccessTestMixin(BaseMixin):
+
+    def generate_data(self):
+        super().generate_data()
+        division = self.employee.divisions.all()[0]
+        other_division = models.Division.objects.create(name='other_division')
+
+        objects = self.factory_class.create_batch(size=3)
+        objects[0].full_access.add(division)
+        objects[1].read_access.add(division)
+        objects[2].full_access.add(other_division)
+
+    def test_get_accessible(self):
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.context['object_list'].count(),
-            self.model_access.objects.all().count()
+        self.assertListEqual(
+            sorted(list(response.context['object_list'].values_list('id', flat=True))),
+            sorted(list(self.view_class.model.GetAccessible(self.user).values_list('id', flat=True)))
         )
 
 
-class DetailTestMixin(LoginRequiredTestMixin):
-    model_access = None
+class ReadAccessTestMixin(SingleObjectTestMixin, BaseMixin):
 
-    def test_200(self):
-        response = self.client.get(self.get_url())
+    def generate_data(self):
+        super().generate_data()
+        division = self.employee.divisions.all()[0]
+        self.get_instance().read_access.add(division)
+
+    def test_no_access(self):
+        self.instance.read_access.clear()
+        self.instance.full_access.clear()
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertEqual(response.status_code, 403)
+
+    def test_read_available_for_full_access(self):
+        self.instance.read_access.clear()
+        division = self.employee.divisions.all()[0]
+        self.instance.full_access.add(division)
+        response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.get_instance(), response.context['object'])
 
 
-class CreateTestMixin(object):
-    view_path = 'perm_employee_create'
-    models = None
-    success_path = None
+class CreateTestMixin(BaseMixin):
 
-    def test_200(self):
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 200)
+    def get_create_data(self) -> dict:
+        raise NotImplementedError()
 
-    def test_update(self):
-        params = self.get_params()
+    def get_ident_param(self) -> dict:
+        return self.get_create_data()
+
+    def test_create(self):
+        params = self.get_create_data()
         response = self.client.post(self.get_url(), params, follow=True)
         if 'form' in response.context:
             self.assertFalse(response.context['form'].errors)
         self.assertTrue(len(response.redirect_chain))
-        created_obj = self.model.objects.filter(**self.get_ident_param())[0]
-        success_url = reverse(self.success_path, args=[created_obj.id])
-        self.assertEqual(response.redirect_chain[0], (success_url, 302))
+        self.assertTrue(self.view_class.model.objects.filter(**self.get_ident_param()).exists())
 
 
-class UpdateTestMixin(CreateTestMixin):
+class UpdateTestMixin(ModifyAccessTestMixin, BaseMixin):
+
+    def get_update_data(self) -> dict:
+        raise NotImplementedError()
+
+    def check_updated(self):
+        raise NotImplementedError()
 
     def test_update(self):
-        params = self.get_params()
+        params = self.get_update_data()
         response = self.client.post(self.get_url(), params, follow=True)
         if 'form' in response.context:
             self.assertFalse(response.context['form'].errors)
         self.assertTrue(len(response.redirect_chain))
-        update_obj = self.model.objects.get(id=self.get_instance().id, **self.get_ident_param())
-        success_url = reverse(self.success_path, args=[update_obj.id])
-        self.assertEqual(response.redirect_chain[0], (success_url, 302))
+        self.check_updated()
 
 
-class DeleteTestMixin(LoginRequiredTestMixin, ModifyAccessTestMixin):
-    model = None
-
-    def test_200(self):
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 200)
+class DeleteTestMixin(ModifyAccessTestMixin, BaseMixin):
 
     def test_delete(self):
         obj_id = self.get_instance().id
         response = self.client.post(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.model.objects.filter(id=obj_id).count(), 0)
+        self.assertFalse(self.view_class.model.objects.filter(id=obj_id).exists())
+
+
+
+
+# class CreateMainEntityTestMixin: # todo: from division_perm.generic.CreateMainEntityMixin -используется только в этом месте , но никогда не выполняется
+#    pass
+#
+#
+# class FormAccessTestMixin: # todo: надо подумать
+#     pass
+#
+# class RestTestMixin: # todo: используется?
+#     pass
+#
+# class RestNestedTestMixin: # todo: используется?
+#     pass
