@@ -1,76 +1,54 @@
 # coding: utf-8
-from .. import consts
-from division_perm.tests.base import BaseTest
-from division_perm.tests.helpers import *
-
-class BaseDivisionTest(BaseTest):
-
-    def get_params(self):
-        division = models.Division.objects.all()[0]
-        p = {
-            'name': 'Managers',
-            'employees': [self.user.employee.id],
-            'full_access': division.id,
-            'read_access': division.id,
-        }
-        return p
-
-    def get_ident_param(self):
-        p = self.get_params()
-
-        return {
-            'name': p['name'],
-            'employees__id__in': p['employees'],
-            'full_access__id__in': [p['full_access']],
-            'read_access__id__in': [p['full_access']],
-        }
+from ..views import division
+from ..tests.base import BaseTest
+from ..tests.helpers import *
+from .. import factories
 
 
-class DivisionListTest(FuncAccessTestMixin, ListAccessTestMixin, ListTestMixin, BaseDivisionTest):
+class ListTest(SortTestMixin, ListAccessTestMixin, FuncAccessTestMixin, LoginRequiredTestMixin, BaseTest):
     view_path = 'perm_division_list'
-    success_url = reverse('perm_division_list') + '?sort=name'
-    model_access = models.Division
-    func_code = consts.SYS_READ_FUNC
+    view_class = division.List
+    factory_class = factories.Division
 
 
-class DivisionDetailTest(ReadAccessTestMixin, DetailTestMixin, BaseDivisionTest):
+class DetailTest(ReadAccessTestMixin, FuncAccessTestMixin, LoginRequiredTestMixin, BaseTest):
     view_path = 'perm_division_detail'
-
-    def get_instance(self):
-        division = models.Division.objects.all()[0]
-        return division
-
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.get_instance().id])
-        return url + '?role_sort=-level' # todo: возможно изменить логику тестового миксина
+    view_class = division.Detail
+    factory_class = factories.Division
 
 
-class DivisionCreateTest(CreateTestMixin, BaseDivisionTest):
+class CreateTest(CreateTestMixin, FuncAccessTestMixin, LoginRequiredTestMixin, BaseTest):
     view_path = 'perm_division_create'
-    model = models.Division
-    success_path = 'perm_division_detail'
+    view_class = division.Create
+    factory_class = factories.Division
+
+    def get_create_data(self) -> dict:
+        return {
+            'name': 'test_created_division',
+            'full_access': self.employee.get_default_division().id
+        }
 
 
-class DivisionUpdateTest(UpdateTestMixin, BaseDivisionTest):
+class UpdateTest(UpdateTestMixin, FuncAccessTestMixin, LoginRequiredTestMixin, BaseTest):
     view_path = 'perm_division_update'
-    model = models.Division
-    success_path = 'perm_division_detail'
+    view_class = division.Update
+    factory_class = factories.Division
 
-    def get_instance(self):
-        return models.Division.objects.all()[0]
+    def get_update_data(self) -> dict:
+        return {
+            'name': 'changed_division',
+            'full_access': self.employee.get_default_division().id
+        }
 
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.get_instance().id])
-        return url
+    def check_updated(self):
+        division = models.Division.objects.get(id=self.get_instance().id)
+        self.assertEqual(
+            division.name,
+            self.get_update_data()['name']
+        )
 
 
-class DivisionDeleteTest(DeleteTestMixin, BaseDivisionTest):
+class DeleteTest(DeleteTestMixin, FuncAccessTestMixin, LoginRequiredTestMixin, BaseTest):
     view_path = 'perm_division_delete'
-    model = models.Division
-
-    def get_instance(self):
-        return self.user.employee.divisions.filter(roles__code=consts.SYS_EDIT_FUNC)[0]
-
-    def get_url(self):
-        url = reverse(self.view_path, args=[self.get_instance().id])
-        return url
+    view_class = division.Delete
+    factory_class = factories.Division
