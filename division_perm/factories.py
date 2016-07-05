@@ -2,7 +2,6 @@
 import factory
 import factory.fuzzy
 from . import models
-from django.contrib.auth.models import User
 
 
 class Division(factory.django.DjangoModelFactory):
