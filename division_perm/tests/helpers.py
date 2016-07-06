@@ -3,6 +3,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
 from .. import models
+from .. import consts
 
 
 class BaseMixin:
@@ -25,6 +26,10 @@ class BaseMixin:
         division = models.Division.objects.create(name='testing')
         division.employees.add(self.employee)
         division.full_access.add(division)
+
+        func_read = models.Func.objects.get(code=consts.SYS_READ_FUNC)
+        role = models.Role.objects.create(name='manager', code=func_read.code, level=9, division=division)
+        self.employee.roles.add(role)
 
     def test_open_success(self):
         response = self.client.get(self.get_url(), follow=True)
