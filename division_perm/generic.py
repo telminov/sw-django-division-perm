@@ -86,7 +86,7 @@ class FormAccessMixin:
 
     def get_initial(self):
         initial = super().get_initial()
-        if not (self.object and self.object.id):
+        if not (self.object and self.object.pk):
             initial['full_access'] = [self.request.user.employee.get_default_division()]
         return initial
 

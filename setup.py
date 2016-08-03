@@ -9,7 +9,7 @@ def get_requires():
 
 setup(
     name='sw-django-perm-division',
-    version='0.0.6',
+    version='0.0.7',
     description='Soft Way company permission system based on employee division affiliations.',
     author='Telminov Sergey',
     author_email='sergey@telminov.ru',
