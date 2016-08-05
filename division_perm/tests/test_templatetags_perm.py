@@ -1,7 +1,7 @@
 # coding: utf-8
 
 from django.test import TestCase
-from django.template import Context, Template
+from django.template import Context
 from django.contrib.auth.models import User
 
 from division_perm import models
@@ -98,7 +98,7 @@ class BlockSuperIfCanFuncTagTest(BaseTemplatetagsTest):
         self.assertFalse(self.func.level <= self.role.level)
         self.role.level = self.func.level + 2
         self.role.save()
-        context = Context({'user': self.user, 'block':mock_block})
+        context = Context({'user': self.user, 'block': mock_block})
         result = block_super_if_can_func(context, self.func.code, self.employee)
         self.assertEqual(result['content'], context['block'].super)
         self.assertEqual(
