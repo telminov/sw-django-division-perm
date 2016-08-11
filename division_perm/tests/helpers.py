@@ -44,7 +44,7 @@ class LoginRequiredTestMixin(BaseMixin):
 
     def test_is_not_authenticated(self):
         self.client.logout()
-        response = self.client.get(self.get_url(),follow=True)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 403)
 
 

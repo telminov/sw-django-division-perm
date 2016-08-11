@@ -1,0 +1,26 @@
+{% extends 'core/index.html' %}
+{% load bootstrap %}
+
+{% block content %}
+    <form action="" method="post">{% csrf_token %}
+        <p>Вы действительно хотите удалить "{{ object }}"?</p>
+
+        <div class="row">
+            <div class="col-sm-2">
+                {% block back_button %}
+                    <a href=".." class="btn btn-default">
+                        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                        Назад
+                    </a>
+                {% endblock %}
+            </div>
+
+            <div class="col-sm-2 col-sm-offset-8">
+                <button type="submit" class="btn btn-danger">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    </form>
+{% endblock %}

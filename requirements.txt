@@ -1,3 +1,6 @@
 django
 sw-python-utils
+sw-django-utils
 djangorestframework
+django-bootstrap-pagination==1.6.1
+django-bootstrap-form==3.2

@@ -1,0 +1,36 @@
+{% extends 'core/index.html' %}
+{% load bootstrap %}
+
+{% block content %}
+    <form class="form-horizontal" method="post" enctype="multipart/form-data">{% csrf_token %}
+        {% block form %}
+            {{ form|bootstrap_horizontal }}
+        {% endblock %}
+
+        <div class="row"></div>
+
+        <div class="form-group">
+            <div class="col-sm-2 col-sm-offset-2" style="margin-top: 20px">
+                {% block back_button %}
+                    <a href=".." class="btn btn-default btn-block">
+                        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                        Назад
+                    </a>
+                {% endblock %}
+            </div>
+
+            <div class="col-sm-2 col-sm-offset-4" style="margin-top: 20px">
+                {% block extra_buttons %}{% endblock %}
+            </div>
+
+            <div class="col-sm-2" style="margin-top: 20px">
+                {% block edit_button %}
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+                        Сохранить
+                    </button>
+                {% endblock %}
+            </div>
+        </div>
+    </form>
+{% endblock %}

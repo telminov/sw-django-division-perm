@@ -26,7 +26,7 @@ class Detail(TitleMixin, ReadAccessMixin, LoginRequiredMixin, generic.DetailView
         return 'Сотрудник "%s"' % self.get_object()
 
 
-class Create(CreateMainEntityMixin, FormAccessMixin, TitleMixin, LoginRequiredMixin, generic.CreateView):
+class Create(CreateMainEntityMixin, FormAccessMixin, TitleMixin, FuncAccessMixin, LoginRequiredMixin, generic.CreateView):
     func_code = consts.SYS_EDIT_FUNC
     title = 'Регистрация сотрудника'
     model = models.Employee

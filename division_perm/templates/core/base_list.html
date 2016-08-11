@@ -1,0 +1,60 @@
+{% extends 'core/index.html' %}
+{% load bootstrap %}
+{% load bootstrap_pagination %}
+
+{% block content %}
+    {% block form %}
+        <form role="form">
+            {% if form %}
+                {{ form|bootstrap_horizontal }}
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-4">
+                    {% block add_button %}
+                        <a class="btn btn-success" href="create/">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                            Добавить
+                        </a>
+                    {% endblock %}
+                </div>
+
+                <div class="col-md-4">
+                    {% if page_obj.paginator.num_pages > 1 %}
+                        {% bootstrap_paginate page_obj range=5 %}
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    {% if form %}
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-success btn-block">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span> Показать
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    {% endblock %}
+
+    <table class="table">
+        {% block table %}{% endblock %}
+    </table>
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
+
+    {% block focus %}
+        <script type="text/javascript">
+            $(function(){
+                $(document.getElementById(
+                    "{% block focus_id %}" +
+                    $('form').find('select, input[type!=hidden]:not(.hasDatepicker)').first().attr('id') +
+                    "{% endblock %}"
+                )).focus().select();
+            })
+        </script>
+    {% endblock %}
+{% endblock %}

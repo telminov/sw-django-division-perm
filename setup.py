@@ -20,5 +20,7 @@ setup(
     install_requires=get_requires(),
     tests_require=[
         'factory_boy',
-    ]
+    ],
+    # test_suite='nose.collector',
+    test_suite='runtests.runtests',
 )
