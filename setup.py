@@ -21,6 +21,6 @@ setup(
     tests_require=[
         'factory_boy',
     ],
-    test_suite='nose.collector',
-    # test_suite='runtests.runtests',
+    # test_suite='nose.collector',
+    test_suite='runtests.runtests',
 )
