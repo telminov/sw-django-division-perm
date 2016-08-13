@@ -9,6 +9,6 @@ install:
   - pip install -r requirements.txt
   - pip install coveralls
 script:
-  - coverage run --source=time_logger setup.py test
+  - coverage run --source=division_perm setup.py test
 after_success:
   - coveralls
