@@ -1,0 +1,14 @@
+language: python
+python:
+  - "3.5"
+env:
+  - DJANGO=1.9
+services:
+  - mongodb
+install:
+  - pip install -r requirements.txt
+  - pip install coveralls
+script:
+  - coverage run --source=time_logger setup.py test
+after_success:
+  - coveralls
