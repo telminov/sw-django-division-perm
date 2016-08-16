@@ -143,8 +143,8 @@ class ListAccessTestMixin(BaseMixin):
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertListEqual(
-            sorted(list(response.context['object_list'].values_list('id', flat=True))),
-            sorted(list(self.view_class.model.GetAccessible(self.user).values_list('id', flat=True)))
+            sorted(list(response.context['object_list'].values_list('pk', flat=True))),
+            sorted(list(self.view_class.model.GetAccessible(self.user).values_list('pk', flat=True)))
         )
 
 
