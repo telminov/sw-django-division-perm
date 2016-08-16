@@ -206,7 +206,7 @@ class UpdateTestMixin(ModifyAccessTestMixin, BaseMixin):
 class DeleteTestMixin(ModifyAccessTestMixin, BaseMixin):
 
     def test_delete(self):
-        obj_id = self.get_instance().id
+        obj_id = self.get_instance().pk
         response = self.client.post(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(self.view_class.model.objects.filter(id=obj_id).exists())
