@@ -79,7 +79,7 @@ class SingleObjectTestMixin(BaseMixin):
             return instance
 
     def get_url(self):
-        url = reverse(self.view_path, args=[self.get_instance().id])
+        url = reverse(self.view_path, args=[self.get_instance().pk])
         return url
 
 
