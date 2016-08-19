@@ -6,7 +6,8 @@
     "code": "sys_edit",
     "name": "Редактирование системной информации",
     "description": "",
-    "level": 9
+    "level": 9,
+    "is_modify": true
   }
 },
 {
@@ -16,7 +17,8 @@
     "code": "sys_read",
     "name": "Просмотр системной информации",
     "description": "",
-    "level": 0
+    "level": 0,
+    "is_modify": false
   }
 }
 ]
