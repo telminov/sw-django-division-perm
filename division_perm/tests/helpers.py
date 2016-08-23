@@ -213,11 +213,6 @@ class DeleteTestMixin(ModifyAccessTestMixin, BaseMixin):
 
 
 
-
-# class CreateMainEntityTestMixin: # todo: from division_perm.generic.CreateMainEntityMixin -используется только в этом месте , но никогда не выполняется
-#    pass
-#
-#
 # class FormAccessTestMixin: # todo: надо подумать
 #     pass
 #
