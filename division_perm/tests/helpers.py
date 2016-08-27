@@ -209,15 +209,10 @@ class DeleteTestMixin(ModifyAccessTestMixin, BaseMixin):
         obj_id = self.get_instance().pk
         response = self.client.post(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(self.view_class.model.objects.filter(id=obj_id).exists())
+        self.assertFalse(self.view_class.model.objects.filter(pk=obj_id).exists())
 
 
 
-
-# class CreateMainEntityTestMixin: # todo: from division_perm.generic.CreateMainEntityMixin -используется только в этом месте , но никогда не выполняется
-#    pass
-#
-#
 # class FormAccessTestMixin: # todo: надо подумать
 #     pass
 #
