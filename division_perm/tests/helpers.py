@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 from .. import models
 from .. import consts
 
-
 class BaseMixin:
     view_path = None    # ''
     view_class = None   #
@@ -32,8 +31,9 @@ class BaseMixin:
         self.employee.roles.add(role)
 
     def test_open_success(self):
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertEqual(response.status_code, 200)
+        if hasattr(self.view_class, 'get'):
+            response = self.client.get(self.get_url(), follow=True)
+            self.assertEqual(response.status_code, 200)
 
 
 class LoginRequiredTestMixin(BaseMixin):
@@ -54,7 +54,7 @@ class SortTestMixin(BaseMixin):
         if not (hasattr(self.view_class, 'sort_params') and self.view_class.sort_params):
             return
 
-        sort_param = self.view_class.sort_params[0]
+        sort_param = self.view_class.get_default_sort_param()
         sorted_url = reverse(self.view_path) + '?sort=' + sort_param
         response = self.client.get(self.get_url(), follow=True)
         self.assertEqual(response.status_code, 200)
@@ -119,12 +119,21 @@ class ModifyAccessTestMixin(SingleObjectTestMixin, BaseMixin):
         division = self.employee.get_default_division()
         self.get_main_entity().full_access.add(division)
 
-    def test_read_access_is_not_enough(self):
-        self.get_main_entity().full_access.clear()
-        division = self.employee.get_default_division()
-        self.get_main_entity().read_access.add(division)
-        response = self.client.get(self.get_url(), follow=True)
-        self.assertEqual(response.status_code, 403)
+    def test_read_access_is_not_enough_get(self):
+        if hasattr(self.view_class, 'get'):
+            self.get_main_entity().full_access.clear()
+            division = self.employee.get_default_division()
+            self.get_main_entity().read_access.add(division)
+            response = self.client.get(self.get_url(), follow=True)
+            self.assertEqual(response.status_code, 403)
+
+    def test_read_access_is_not_enough_post(self):
+        if hasattr(self.view_class, 'post'):
+            self.get_main_entity().full_access.clear()
+            division = self.employee.get_default_division()
+            self.get_main_entity().read_access.add(division)
+            response = self.client.post(self.get_url(), follow=True)
+            self.assertEqual(response.status_code, 403)
 
 
 class ListAccessTestMixin(BaseMixin):
